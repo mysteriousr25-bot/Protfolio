@@ -1,0 +1,14 @@
+.carousel-track {
+  will-change: transform;
+}
+
+.carousel-slide {
+  box-sizing: border-box;
+  flex: 0 0 var(--carousel-slide-width, 100%);
+  width: var(--carousel-slide-width, 100%);
+}
+
+/* hide scrollbar */
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
