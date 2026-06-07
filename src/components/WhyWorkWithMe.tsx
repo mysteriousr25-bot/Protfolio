@@ -67,7 +67,7 @@ export function WhyWorkWithMe() {
                     <img
                       src={point.image}
                       alt={point.title}
-                      className="w-full h-full object-cover grayscale brightness-50"
+                      className="w-full h-full object-cover brightness-50"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent"></div>
                   </div>

@@ -64,7 +64,7 @@ export function CreativePortfolio() {
                   <img
                     src={work.image}
                     alt={work.title}
-                    className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 ease-out group-hover:scale-110"
+                    className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-all duration-700 ease-out group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent opacity-90 group-hover:opacity-70 transition-opacity duration-500"></div>
 

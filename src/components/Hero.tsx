@@ -89,7 +89,7 @@ export function Hero() {
                         t.src = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
                       }
                     }}
-                    className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 relative z-0 shadow-2xl"
+                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-all duration-700 relative z-0 shadow-2xl"
                   />
                 </a>
 

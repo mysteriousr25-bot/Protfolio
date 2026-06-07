@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { FadeIn } from './ui/FadeIn'
 import { Parallax } from './ui/Parallax'
 export function About() {
+  const videoRef = useRef<HTMLVideoElement | null>(null)
   return (
     <section
       id="about"
@@ -20,8 +21,25 @@ export function About() {
           <div className="lg:col-span-5">
             <FadeIn direction="right">
               <div className="aspect-[4/5] w-full relative group">
-                <div className="absolute inset-0 bg-gradient-to-tr from-dark/60 to-transparent z-10"></div>
-                <a href="/images/ali2.jpeg" target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                <a href="/ali.mp4" target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                    <video
+                      ref={videoRef}
+                      className="w-full h-full object-cover transition-all duration-700"
+                    poster="/images/ali2.jpeg"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    src="/ali.mp4"
+                      style={{ filter: 'brightness(1.06) contrast(1.08)', transform: 'translateZ(0)' }}
+                      onLoadedMetadata={() => {
+                        if (videoRef.current) videoRef.current.playbackRate = 0.9
+                      }}
+                    >
+                    <source src="/ali.mp4" type="video/mp4" />
+                    {/* Fallback image if video cannot play */}
+                  </video>
                   <img
                     src="/images/ali2.jpeg"
                     alt="Ali Khalik working"
@@ -32,7 +50,7 @@ export function About() {
                         t.src = 'https://images.unsplash.com/photo-1556157382-97eda2d62296?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
                       }
                     }}
-                    className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 transition-all duration-700"
+                      className="w-full h-full object-cover transition-all duration-700 hidden"
                   />
                 </a>
                 <div className="absolute inset-0 border border-gold/30 translate-x-4 translate-y-4 -z-10 transition-transform duration-500 group-hover:translate-x-6 group-hover:translate-y-6"></div>
