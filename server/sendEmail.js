@@ -1,4 +1,5 @@
 require('dotenv').config()
+
 const express = require('express')
 const cors = require('cors')
 const nodemailer = require('nodemailer')
@@ -6,8 +7,12 @@ const nodemailer = require('nodemailer')
 const app = express()
 app.use(express.json())
 
-const PORT = parseInt(process.env.PORT || '4000', 10)
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || process.env.VITE_FRONTEND_ORIGIN || 'http://localhost:5173'
+const PORT = process.env.PORT || 4000
+
+const FRONTEND_ORIGIN =
+  process.env.FRONTEND_ORIGIN ||
+  process.env.VITE_FRONTEND_ORIGIN ||
+  'http://localhost:5173'
 
 app.use(
   cors({
@@ -17,73 +22,93 @@ app.use(
   })
 )
 
-// create transporter from env
 function createTransporter() {
   const host = process.env.SMTP_HOST
-  const port = parseInt(process.env.SMTP_PORT || '587', 10)
+  const port = Number(process.env.SMTP_PORT || 587)
   const user = process.env.SMTP_USER
   const pass = process.env.SMTP_PASS
-  const secure = port === 465
+
   if (!host || !user || !pass) return null
-  return nodemailer.createTransport({ host, port, secure, auth: { user, pass } })
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: {
+      user,
+      pass,
+    },
+  })
 }
 
-let transporter = null
-let smtpReady = false
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-  transporter = createTransporter()
-  transporter
-    .verify()
-    .then(() => {
-      smtpReady = true
-      console.log('SMTP connected successfully')
-    })
-    .catch((err) => {
-      smtpReady = false
-      console.error('SMTP connection failed:', err && err.stack ? err.stack : err)
-    })
-} else {
-  console.log('SMTP config missing — server-side email disabled. Set SMTP_HOST, SMTP_USER, SMTP_PASS')
-}
+const transporter = createTransporter()
 
 app.post('/api/send', async (req, res) => {
   const { name, email, message } = req.body || {}
-  const inquiry = (req.body && (req.body.inquiry || req.body.inquiryType)) || ''
-  if (!name || !email || !inquiry || !message) {
-    return res.status(400).json({ ok: false, error: 'Missing fields: name, email, inquiry/inquiryType, message are required' })
+
+  const inquiry = req.body?.inquiry || req.body?.inquiryType || ''
+
+  if (!name || !email || !message || !inquiry) {
+    return res.status(400).json({
+      ok: false,
+      error: 'Missing required fields',
+    })
   }
 
-  if (!transporter || !smtpReady) {
-    console.error('Attempt to send email but SMTP unavailable')
-    return res.status(500).json({ ok: false, error: 'SMTP not configured or not connected' })
+  const to = process.env.DESTINATION_EMAIL
+
+  if (!to) {
+    return res.status(500).json({
+      ok: false,
+      error: 'DESTINATION_EMAIL not set',
+    })
   }
 
-  const to = process.env.DESTINATION_EMAIL || 'supriyahalder81000@gmail.com'
-  const mail = {
-    from: `${name} <${email}>`,
-    to,
-    subject: `New Website Inquiry`,
-    text: `Name: ${name}\nEmail: ${email}\nInquiry Type: ${inquiry}\n\nMessage:\n${message}`,
-    html: `<p><strong>Name:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p><p><strong>Inquiry Type:</strong> ${escapeHtml(inquiry)}</p><hr /><p><strong>Message:</strong></p><p>${escapeHtml(message).replace(/\n/g,'<br/>')}</p>`,
+  if (!transporter) {
+    return res.status(500).json({
+      ok: false,
+      error: 'SMTP not configured',
+    })
   }
 
   try {
-    const info = await transporter.sendMail(mail)
-    console.log('Email sent successfully:', { messageId: info.messageId, accepted: info.accepted })
-    return res.json({ ok: true, info: { messageId: info.messageId, accepted: info.accepted } })
+    const info = await transporter.sendMail({
+      from: `${name} <${email}>`,
+      to,
+      subject: 'New Website Inquiry',
+      text: `Name: ${name}\nEmail: ${email}\nInquiry: ${inquiry}\n\nMessage:\n${message}`,
+      html: `
+        <p><b>Name:</b> ${escapeHtml(name)}</p>
+        <p><b>Email:</b> ${escapeHtml(email)}</p>
+        <p><b>Inquiry:</b> ${escapeHtml(inquiry)}</p>
+        <hr/>
+        <p><b>Message:</b><br/>${escapeHtml(message).replace(/\n/g, '<br/>')}</p>
+      `,
+    })
+
+    return res.json({
+      ok: true,
+      messageId: info.messageId,
+    })
   } catch (err) {
-    console.error('sendEmail error:', err && err.stack ? err.stack : err)
-    return res.status(500).json({ ok: false, error: err && err.message ? err.message : String(err) })
+    return res.status(500).json({
+      ok: false,
+      error: err.message,
+    })
   }
 })
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, now: new Date().toISOString(), smtp: !!transporter && smtpReady })
+  res.json({
+    ok: true,
+    smtp: !!transporter,
+    time: new Date().toISOString(),
+  })
 })
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
-  console.log(`CORS origin allowed: ${FRONTEND_ORIGIN}`)
+  console.log(`Allowed origin: ${FRONTEND_ORIGIN}`)
 })
 
 function escapeHtml(str) {
@@ -92,6 +117,6 @@ function escapeHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
+    .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;')
 }
